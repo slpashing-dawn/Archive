@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eorzea Chronicle Archive - GALLERY</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* [공통 리셋 및 테마 변수] */
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background-color: #12100e; background-image: radial-gradient(circle, #221d1a 0%, #0d0b0a 100%); color: #dfdfdf; font-family: 'Noto Serif KR', serif; font-size: 11pt; line-height: 1.6; padding-bottom: 90px; overflow-x: hidden; }
+        :root { --ff-gold: #c6a152; --ff-gold-dark: #8c6f34; --ff-gold-bright: #e5c687; --ff-dark-bg: #211d1c; --ff-dark-border: #463e39; --ff-light-bg: #eadeca; --ff-light-border: #9f8e70; --ff-text-dark: #2b2521; }
+
+        /* [1] 좌측 메뉴 서랍 트리거 & 사이드바 */
+        .ff-menu-trigger { position: fixed; top: 20px; left: 20px; width: 55px; height: 55px; background-image: url('https://ffxiv.gamerescape.com/w/images/4/41/Mainquest1_Icon.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; z-index: 1001; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); transition: transform 0.2s; }
+        .ff-menu-trigger:hover { transform: scale(1.08) rotate(5deg); }
+        .ff-sidebar-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(1px); z-index: 1001; }
+        .ff-sidebar-mask.show { display: block; }
+        .ff-sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: linear-gradient(90deg, #1d1917 0%, #13100f 100%); border-right: 2px solid var(--ff-dark-border); box-shadow: 5px 0 25px rgba(0,0,0,0.8); z-index: 1002; padding: 90px 15px 30px 15px; transition: left 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); }
+        .ff-sidebar.open { left: 0; }
+        .ff-sidebar-close { position: absolute; top: 25px; right: 20px; color: #8c8276; font-size: 11pt; cursor: pointer; font-weight: bold; }
+        .ff-side-menu { list-style: none; padding: 0; margin: 0; }
+        .ff-side-menu li { margin-bottom: 12px; }
+        .ff-side-menu a { display: flex; align-items: center; color: #a89e94; text-decoration: none; padding: 10px 12px; border-radius: 4px; font-size: 11pt; font-weight: bold; transition: all 0.2s; }
+        .ff-side-menu a img { width: 26px; height: 26px; margin-right: 15px; }
+        .ff-side-menu a:hover { color: #ffffff; background: linear-gradient(90deg, #3d3531 0%, transparent 100%); border-left: 3px solid var(--ff-gold); padding-left: 15px; }
+        .ff-side-menu a.active { color: var(--ff-gold-bright); background: rgba(198, 161, 82, 0.08); border-left: 3px solid var(--ff-gold-bright); }
+
+        /* [2] 메인 레이아웃 */
+        .ff-wrapper { max-width: 1200px; margin: 40px auto; padding: 0 40px 0 100px; }
+        .ff-page-header { margin-bottom: 25px; }
+        .ff-gallery-main-title { color: var(--ff-gold); font-size: 16pt; border-bottom: 2px solid var(--ff-dark-border); padding-bottom: 10px; margin: 0; letter-spacing: 1px; text-shadow: 1px 1px 2px #000; }
+
+        /* [3] 상단 카테고리 탭 내비게이션 (유형별 세분화) */
+        .ff-gallery-tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid var(--ff-dark-border); padding-bottom: 12px; }
+        .ff-tab-btn { background: #1b1817; border: 1px solid var(--ff-dark-border); color: #a89e94; padding: 8px 20px; font-family: inherit; font-size: 10pt; font-weight: bold; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .ff-tab-btn:hover { border-color: var(--ff-gold); color: #fff; }
+        .ff-tab-btn.active { background: linear-gradient(180deg, #443c37 0%, #292421 100%); border-color: var(--ff-gold-bright); color: var(--ff-gold-bright); box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
+        /* [4] 갤러리 미디어 그리드 보드 */
+        .ff-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .ff-gallery-card { background: #1b1817; border: 2px solid var(--ff-dark-border); border-radius: 6px; overflow: hidden; cursor: pointer; transition: all 0.25s cubic-bezier(0.1, 0.8, 0.2, 1); box-shadow: 0 5px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+        .ff-gallery-card:hover { border-color: var(--ff-gold); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(198,161,82,0.15); }
+        
+        /* 이미지 프레임 비율 안정화 */
+        .ff-card-thumb-frame { width: 100%; aspect-ratio: 16 / 10; background-color: #0d0b0a; overflow: hidden; position: relative; border-bottom: 1px solid var(--ff-dark-border); }
+        .ff-card-thumb-frame img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+        .ff-gallery-card:hover .ff-card-thumb-frame img { transform: scale(1.03); }
+
+        /* 카드 텍스트 구역 */
+        .ff-card-desc-zone { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .ff-card-top-meta { display: flex; justify-content: space-between; font-size: 8.5pt; font-weight: bold; margin-bottom: 6px; }
+        .ff-card-tag { color: var(--ff-gold-bright); }
+        .ff-card-author { color: #8c8276; }
+        .ff-card-title { font-size: 11pt; font-weight: bold; color: #dfdfdf; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ff-card-date { font-size: 9pt; color: #5a524b; text-align: right; }
+
+        /* [5] 고해상도 라이트박스 모달 뷰어 (기능 대폭 확장) */
+        .ff-lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(8, 7, 6, 0.92); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 30px; }
+        .ff-lightbox-overlay.show { display: flex; }
+        
+        .ff-lightbox-window { background: var(--ff-dark-bg); border: 3px solid var(--ff-dark-border); border-radius: 8px; max-width: 950px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; position: relative; }
+        .ff-lightbox-close { position: absolute; top: 15px; right: 20px; color: #a89e94; font-size: 13pt; cursor: pointer; font-weight: bold; z-index: 10; }
+        .ff-lightbox-close:hover { color: #fff; }
+
+        /* 상단 대형 이미지 표출 구역 */
+        .ff-lightbox-media-box { width: 100%; background: #000; display: flex; justify-content: center; align-items: center; border-bottom: 2px solid var(--ff-dark-border); }
+        .ff-lightbox-media-box img { max-width: 100%; max-height: 55vh; object-fit: contain; display: block; }
+
+        /* 하단 인게임 말장식 대사창 스타일 서술 구역 */
+        .ff-lightbox-details { padding: 30px 40px; background-image: linear-gradient(180deg, #181514 0%, #110f0e 100%); position: relative; }
+        .ff-lightbox-details::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent 0%, var(--ff-gold) 50%, transparent 100%); }
+        
+        .ff-lb-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px style; border-bottom: 1px solid rgba(140, 111, 52, 0.2); padding-bottom: 10px; }
+        .ff-lb-title-group { display: flex; flex-direction: column; gap: 4px; }
+        .ff-lb-title { font-size: 14pt; font-weight: bold; color: var(--ff-gold-bright); margin: 0; }
+        .ff-lb-meta-sub { font-size: 9pt; color: #8c8276; }
+
+        /* [신규 추가] 이미지 출처 및 외부 이동용 버튼 링크 구역 */
+        .ff-lb-source-zone { margin-bottom: 15px; }
+        .ff-source-btn { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(180deg, #534a44 0%, #312b28 100%); border: 1px solid #1a1716; outline: 1px solid #6b5f56; color: var(--ff-gold-bright); padding: 5px 14px; font-size: 9pt; font-weight: bold; border-radius: 4px; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+        .ff-source-btn:hover { outline-color: var(--ff-gold-bright); background: #3d3531; color: #fff; }
+
+        /* [신규 추가] 상세 정보 박스 양식 */
+        .ff-lb-info-box { background: rgba(0,0,0,0.3); border: 1px solid var(--ff-dark-border); border-radius: 4px; padding: 15px 20px; margin-top: 10px; }
+        .ff-lb-author-row { font-size: 9.5pt; color: var(--ff-gold); font-weight: bold; margin-bottom: 8px; border-bottom: 1px dashed #3a322d; padding-bottom: 6px; }
+        .ff-lb-body-text { font-size: 10.5pt; line-height: 1.7; color: #dfdfdf; white-space: pre-wrap; word-break: break-all; }
+
+        /* [6] 하단 고정형 오케스트리온 BGM 플레이어 */
+        .ff-footer-player { position: fixed; bottom: 0; left: 0; width: 100%; background: linear-gradient(180deg, #221d1b 0%, #141110 100%); border-top: 2px solid var(--ff-gold); box-shadow: 0 -4px 15px rgba(0,0,0,0.6); z-index: 1000; }
+        .ff-player-main { height: 60px; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; }
+        .ff-bgm-info { color: var(--ff-gold); font-size: 10pt; font-weight: bold; }
+        .ff-bgm-info span { color: #a89e94; font-weight: normal; font-size: 9.5pt; margin-left: 8px; }
+        .ff-player-controls { display: flex; align-items: center; gap: 8px; }
+        .ff-btn { background: linear-gradient(180deg, #534a44 0%, #312b28 100%); border: 1px solid #1a1716; outline: 1px solid #6b5f56; color: #e2dcd6; padding: 4px 16px; font-size: 9pt; font-weight: bold; border-radius: 15px; cursor: pointer; transition: all 0.1s; }
+        .ff-btn:hover { outline-color: var(--ff-gold); color: #fff; }
+        .ff-btn.active { outline-color: var(--ff-gold-bright); color: var(--ff-gold-bright); background: linear-gradient(180deg, #3d3531 0%, #1a1715 100%); }
+        .ff-volume-slider { -webkit-appearance: none; appearance: none; width: 80px; height: 5px; background: #3e3530; border-radius: 3px; outline: none; margin-left: 10px; }
+        .ff-volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--ff-gold-bright); cursor: pointer; }
+        
+        .ff-playlist-panel { display: none; background: #181514; border-top: 1px solid var(--ff-dark-border); max-height: 200px; overflow-y: auto; padding: 15px 30px; }
+        .ff-playlist-panel.show { display: block; }
+        .ff-track-list { list-style: none; padding: 0; margin: 0; }
+        .ff-track-item { padding: 6px 10px; font-size: 9.5pt; color: #a89e94; cursor: pointer; display: flex; justify-content: space-between; border-radius: 3px; }
+        .ff-track-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .ff-track-item.current { color: var(--ff-gold-bright); background: rgba(198, 161, 82, 0.08); font-weight: bold; }
+
+        /* 플로팅 메뉴 및 모달 공통 */
+        .ff-floating-menu { position: fixed; bottom: 85px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 1001; }
+        .ff-floating-btn { width: 48px; height: 48px; border-radius: 4px; background-size: contain; background-position: center; background-repeat: no-repeat; cursor: pointer; border: 2px solid #3a322d; background-color: #1b1817; }
+        .ff-btn-letter { background-image: url('https://ffxiv.gamerescape.com/w/images/e/e6/MainIcon45.png'); }
+        .ff-btn-guestbook { background-image: url('https://ffxiv.gamerescape.com/w/images/d/de/MainIcon79.png'); }
+
+        .ff-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(2px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .ff-modal-overlay.show { display: flex; }
+        .ff-sysmail-window, .ff-guestbook-window { background-color: var(--ff-light-bg); border: 3px solid var(--ff-light-border); border-radius: 8px; width: 100%; color: var(--ff-text-dark); padding: 20px 25px; position: relative; }
+        .ff-sysmail-window { max-width: 480px; } .ff-guestbook-window { max-width: 650px; }
+        .ff-btn-mail-confirm { background: linear-gradient(180deg, #eae3d8 0%, #cdc2b1 100%); border: 1px solid #7c705c; color: #38312b; padding: 6px 35px; font-size: 10pt; font-weight: bold; border-radius: 18px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="ff-menu-trigger" onclick="toggleSidebar()"></div>
+    <div class="ff-sidebar-mask" id="sidebarMask" onclick="toggleSidebar()"></div>
+    <nav class="ff-sidebar" id="sidebar">
+        <div class="ff-sidebar-close" onclick="toggleSidebar()">✕ CLOSE</div>
+        <ul class="ff-side-menu">
+            <li><a href="index.html"><img src="https://ffxiv.gamerescape.com/w/images/2/20/MainIcon52.png"> HOME</a></li>
+            <li><a href="character.html"><img src="https://ffxiv.gamerescape.com/w/images/0/0e/MainIcon1.png"> CHARACTER</a></li>
+            <li><a href="gallery.html" class="active"><img src="https://ffxiv.gamerescape.com/w/images/8/84/MainIcon88.png"> GALLERY</a></li>
+            <li><a href="backup.html"><img src="https://ffxiv.gamerescape.com/w/images/f/fb/MainIcon30.png"> BACKUP</a></li>
+            <li><a href="notice.html"><img src="https://ffxiv.gamerescape.com/w/images/8/89/MainIcon5.png"> NOTICE</a></li>
+        </ul>
+    </nav>
+
+    <div class="ff-wrapper">
+        <header class="ff-page-header">
+            <h1 class="ff-gallery-main-title">IMAGES & ARTWORKS</h1>
+        </header>
+
+        <div class="ff-gallery-tabs">
+            <button class="ff-tab-btn active" onclick="filterGallery('all', this)">전체 미디어</button>
+            <button class="ff-tab-btn" onclick="filterGallery('screenshot', this)">📷 인게임 스샷</button>
+            <button class="ff-tab-btn" onclick="filterGallery('illustration', this)">🎨 직접 그린 그림</button>
+            <button class="ff-tab-btn" onclick="filterGallery('concept', this)">📜 설정 및 원화</button>
+        </div>
+
+        <div class="ff-gallery-grid" id="galleryGrid">
+            </div>
+    </div>
+
+    <div class="ff-lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <div class="ff-lightbox-window">
+            <div class="ff-lightbox-close" onclick="closeLightbox(null)">✕</div>
+            
+            <div class="ff-lightbox-media-box">
+                <img id="lbImg" src="" alt="확대 이미지">
+            </div>
+
+            <div class="ff-lightbox-details">
+                <div class="ff-lb-header">
+                    <div class="ff-lb-title-group">
+                        <h2 class="ff-lb-title" id="lbTitle">작품 제목</h2>
+                        <div class="ff-lb-meta-sub" id="lbMeta">카테고리 // 날짜</div>
+                    </div>
+                </div>
+
+                <div class="ff-lb-source-zone" id="lbSourceZone" style="display: none;">
+                    </div>
+
+                <div class="ff-lb-info-box" id="lbInfoBox">
+                    <div class="ff-lb-author-row" id="lbAuthor">Author: 본인 제작</div>
+                    <div class="ff-lb-body-text" id="lbDescription">여기에 작품 비하인드 스토리나 사진 정보 텍스트가 노출됩니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="ff-footer-player">
+        <div class="ff-player-main">
+            <div class="ff-bgm-info">🎵 <span id="currentTitle">Night in the Brume</span> <span id="currentSub">- Ishgard Theme</span></div>
+            <div class="ff-player-controls">
+                <button class="ff-btn" onclick="playPrev()">⏮</button>
+                <button class="ff-btn" id="playBtn" onclick="togglePlay()">PLAY</button>
+                <button class="ff-btn" onclick="playNext()">⏭</button>
+                <button class="ff-btn" id="listToggleBtn" onclick="togglePlaylist()" style="margin-left: 5px;">ORCHESTRION</button>
+                <input type="range" class="ff-volume-slider" min="0" max="1" step="0.1" value="0.5">
+            </div>
+        </div>
+        <div class="ff-playlist-panel" id="playlistPanel">
+            <ul class="ff-track-list">
+                <li class="ff-track-item current" onclick="selectTrack(0)">01. Night in the Brume <span>- Ishgard Theme</span></li>
+                <li class="ff-track-item" onclick="selectTrack(1)">02. Answers <span>- ARR Theme</span></li>
+                <li class="ff-track-item" onclick="selectTrack(2)">03. Tomorrow and Tomorrow <span>- Shadowbringers Theme</span></li>
+            </ul>
+        </div>
+    </footer>
+
+    <aside class="ff-floating-menu">
+        <div class="ff-floating-btn ff-btn-letter" onclick="openLetterModal()"></div>
+        <div class="ff-floating-btn ff-btn-guestbook" onclick="openModal('guestbookModal')"></div>
+    </aside>
+
+    <div class="ff-modal-overlay" id="letterModal">
+        <div class="ff-sysmail-window">
+            <div class="ff-mail-header">Mog Letter ✉️</div>
+            <div class="ff-mail-content-parchment" id="letterContentTarget"></div>
+            <div class="ff-mail-btn-zone"><button class="ff-btn-mail-confirm" onclick="closeModal('letterModal')">확인</button></div>
+        </div>
+    </div>
+
+    <div class="ff-modal-overlay" id="guestbookModal">
+        <div class="ff-guestbook-window">
+            <h3>📜 Guestbook</h3>
+            <p>방명록 모듈이 정상 가동 중입니다.</p>
+            <div style="text-align:center;"><button class="ff-btn-mail-confirm" onclick="closeModal('guestbookModal')">확인</button></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarMask').classList.toggle('show');
+        }
+
+        // [★ 핵심 개편] 갤러리 미디어 데이터셋 (출처유무, 상세설명, 작가 필드 확장)
+        const galleryData = [
+            {
+                id: 1,
+                type: "screenshot",
+                tag: "📷 SCREENSHOT",
+                title: "창천의 거리, 성도 이쉬가르드의 새벽녘",
+                date: "2026.04.12",
+                img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
+                author: "모험가 본인 촬영",
+                source: "", // 출처가 공백이면 출처 버튼 숨김
+                description: "이쉬가르드 하우징 구역을 돌아다니다가 에테라이트 마력 순환이 가장 부드럽게 반사되는 새벽 ET 4시경에 카메라 구도를 잡아보았습니다.\n눈 덮인 석조 건축물에 차가운 새벽빛이 감도는 고유의 중세 분위기를 아카이빙합니다."
+            },
+            {
+                id: 2,
+                type: "illustration",
+                tag: "🎨 ILLUSTRATION",
+                title: "커미션 신청용 자작 캐릭터 전신 완성본",
+                date: "2026.05.20",
+                img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&q=80",
+                author: "그림 작가 'Eorzea_Art'님", // 타인 제작물 예시
+                source: "https://twitter.com", // 출처 링크 입력 시 외부이동 버튼 생성
+                description: "흑마법과 백마법을 동시에 운용하는 마력 순환 설정을 시각화하기 위해 적마도사 기믹의 레이피어와 수첩 촉매를 쥐고 있는 구도로 신청 및 수령한 개인 자캐 아트워크입니다.\n개인 아카이브 기록 외 무단 배포를 금합니다."
+            },
+            {
+                id: 3,
+                type: "concept",
+                tag: "📜 CONCEPT DRAWING",
+                title: "수첩 수납식 로브 의상 마력 선도 초안 낙서",
+                date: "2026.06.02",
+                img: "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&w=600&q=80",
+                author: "모험가 직접 드로잉",
+                source: "https://notion.so", // 노션 기록 백업 출처 예시
+                description: "방 안의 공기가 건조해 펜선이 조금 튀었지만 나름대로 마음에 드는 디자인으로 뽑혔습니다.\n하우징 서고에서 연구용 예복으로 착용한다는 플롯에 맞춰 깃 안쪽에 마력 각인을 새겨놓은 스케치 모듈입니다."
+            }
+        ];
+
+        // 갤러리 리스트 렌더링 시스템
+        function renderGallery(items) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = "";
+
+            if(items.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; color:#6b5f56; text-align:center; padding:50px;">해당 분류에 저장된 미디어 기록이 없습니다쿠포.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "ff-gallery-card";
+                card.onclick = () => openLightbox(item);
+                card.innerHTML = `
+                    <div class="ff-card-thumb-frame">
+                        <img src="${item.img}" alt="${item.title}">
+                    </div>
+                    <div class="ff-card-desc-zone">
+                        <div>
+                            <div class="ff-card-top-meta">
+                                <span class="ff-card-tag">${item.tag}</span>
+                                <span class="ff-card-author">${item.author}</span>
+                            </div>
+                            <h3 class="ff-card-title">${item.title}</h3>
+                        </div>
+                        <div class="ff-card-date">${item.date}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 카테고리 탭 변경 필터
+        function filterGallery(type, btn) {
+            document.querySelectorAll('.ff-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if(type === 'all') {
+                renderGallery(galleryData);
+            } else {
+                const filtered = galleryData.filter(d => d.type === type);
+                renderGallery(filtered);
+            }
+        }
+
+        // [★ 기능 확장] 라이트박스 오픈 및 데이터 동적 매핑
+        function openLightbox(item) {
+            document.getElementById('lbImg').src = item.img;
+            document.getElementById('lbTitle').innerText = item.title;
+            document.getElementById('lbMeta').innerText = `${item.tag} // ARCHIVE DATE: ${item.date}`;
+            document.getElementById('lbAuthor').innerText = `제작 및 소유권 // ${item.author}`;
+            document.getElementById('lbDescription').innerText = item.description;
+
+            // 선택형 출처 링크 버튼 가동 처리
+            const srcZone = document.getElementById('lbSourceZone');
+            if(item.source && item.source.trim() !== "") {
+                srcZone.style.display = "block";
+                srcZone.innerHTML = `<a href="${item.source}" target="_blank" class="ff-source-btn">🔗 이미지 원본 출처 확인하기 (외부 이동)</a>`;
+            } else {
+                srcZone.style.display = "none";
+                srcZone.innerHTML = "";
+            }
+
+            document.getElementById('lightbox').classList.add('show');
+        }
+
+        // 라이트박스 클로즈
+        function closeLightbox(e) {
+            if(e === null || e.target.id === "lightbox" || e.target.className === "ff-lightbox-close") {
+                document.getElementById('lightbox').classList.remove('show');
+            }
+        }
+
+        // 오케스트리온 시스템 로직
+        let isPlaying = false;
+        let currentIdx = 0;
+        const tracks = [
+            {title: "Night in the Brume", sub: "- Ishgard Theme"},
+            {title: "Answers", sub: "- ARR Theme"},
+            {title: "Tomorrow and Tomorrow", sub: "- Shadowbringers Theme"}
+        ];
+
+        function togglePlaylist() {
+            document.getElementById('playlistPanel').classList.toggle('show');
+            document.getElementById('listToggleBtn').classList.toggle('active');
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('playBtn').innerText = isPlaying ? "PAUSE" : "PLAY";
+        }
+
+        function selectTrack(idx) {
+            currentIdx = idx;
+            document.getElementById('currentTitle').innerText = tracks[idx].title;
+            document.getElementById('currentSub').innerText = tracks[idx].sub;
+            
+            const items = document.querySelectorAll('.ff-track-item');
+            items.forEach((item, i) => {
+                if(i === idx) item.classList.add('current');
+                else item.classList.remove('current');
+            });
+        }
+
+        function playNext() { let next = (currentIdx + 1) % tracks.length; selectTrack(next); }
+        function playPrev() { let prev = (currentIdx - 1 + tracks.length) % tracks.length; selectTrack(prev); }
+
+        // 모달 제어
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function openLetterModal() {
+            document.getElementById('letterContentTarget').innerHTML = "<p><strong>쿠포! 일러스트 서고 개편 소식이다쿠포!</strong></p><p>모험가님이 직접 연성하신 그림과 자캐 원화 기록물이 무사히 전송되었습니다. 출처가 기입된 그림은 언제든지 링크 단추를 눌러 외부 보관소로 점프할 수 있습니다쿠포!</p><p style='text-align:right;'>- 예술 보좌관 모그리</p>";
+            openModal('letterModal');
+        }
+
+        // 초기 구동
+        window.onload = function() {
+            renderGallery(galleryData);
+        };
+    </script>
+</body>
+</html>
